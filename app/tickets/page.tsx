@@ -40,7 +40,7 @@ export default async function TicketsPage({ searchParams }: Params) {
         </Button>
       </header>
 
-      <div>
+      <div className="w-full max-w-5xl mx-auto pt-4">
         <TicketFilter status={status} />
       </div>
 

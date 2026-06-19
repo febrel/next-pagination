@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+// 1. Cambia la importación a Roboto
+import { Roboto, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// 2. Configura Roboto con sus subsets y weights
+const roboto = Roboto({
+  variable: "--font-roboto",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "700"], // Elige los grosores que uses (light, regular, medium, bold)
 });
 
 const geistMono = Geist_Mono({
@@ -26,9 +29,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // 3. Añade la variable de roboto a la clase html
+      className={`${roboto.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      {/* 4. Aplica la fuente roboto por defecto en el body */}
+      <body className="font-sans min-h-full flex flex-col">
         {children}
         <Toaster />
       </body>
