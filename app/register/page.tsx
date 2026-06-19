@@ -10,17 +10,19 @@ import { toast } from "sonner";
 import Link from "next/link";
 
 interface Inputs {
+  name: string;
   user: string;
+  email: string;
   password: string;
 }
 
-export default function Login() {
+export default function Register() {
   const router = useRouter();
   const { register, handleSubmit } = useForm<Inputs>();
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     try {
-      const response = await fetch("/api/auth/login", {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -29,12 +31,12 @@ export default function Login() {
       const json = await response.json();
 
       if (!response.ok) {
-        toast.error(json.error || "Error al iniciar sesión");
+        toast.error(json.error || "Error registering");
         return;
       }
 
-      toast.success(`Welcome, ${json.user.name}`);
-      router.push("/tickets");
+      toast.success("Registered successfully! Please login.");
+      router.push("/");
     } catch (err: any) {
       toast.error(err.message);
     }
@@ -44,7 +46,7 @@ export default function Login() {
     <div className="flex items-center justify-center min-h-screen">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Login</CardTitle>
+          <CardTitle className="text-2xl text-center">Register</CardTitle>
         </CardHeader>
         <CardContent>
           <form
@@ -52,37 +54,52 @@ export default function Login() {
             className="flex flex-col gap-4"
           >
             <div>
-              <Label className="block mb-2" htmlFor="user">
-                User
-              </Label>
+              <Label htmlFor="name">Name</Label>
               <Input
-                {...register("user", { required: true })}
-                id="user"
-                placeholder="User name"
+                {...register("name", { required: true })}
+                id="name"
+                placeholder="John Doe"
               />
             </div>
 
             <div>
-              <Label className="block mb-2" htmlFor="password">
-                Password
-              </Label>
+              <Label htmlFor="user">User</Label>
+              <Input
+                {...register("user", { required: true })}
+                id="user"
+                placeholder="john"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                {...register("email", { required: true })}
+                id="email"
+                type="email"
+                placeholder="john@example.com"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="password">Password</Label>
               <Input
                 {...register("password", { required: true })}
                 id="password"
                 type="password"
-                placeholder="*****"
+                placeholder="******"
               />
             </div>
 
             <Button type="submit" className="w-full">
-              Sign in
+              Register
             </Button>
           </form>
 
           <p className="text-sm text-center mt-4 text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-primary hover:underline">
-              Create one
+            Already have an account?{" "}
+            <Link href="/" className="text-primary hover:underline">
+              Login
             </Link>
           </p>
         </CardContent>
