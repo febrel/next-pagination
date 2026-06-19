@@ -31,7 +31,10 @@ export default function Register() {
       const json = await response.json();
 
       if (!response.ok) {
-        toast.error(json.error || "Error registering");
+        const msg = Array.isArray(json.error)
+          ? json.error[0]?.message || "Error registering"
+          : json.error || "Error registering";
+        toast.error(msg);
         return;
       }
 
@@ -54,7 +57,9 @@ export default function Register() {
             className="flex flex-col gap-4"
           >
             <div>
-              <Label htmlFor="name">Name</Label>
+              <Label className="block mb-2" htmlFor="name">
+                Name
+              </Label>
               <Input
                 {...register("name", { required: true })}
                 id="name"
@@ -63,7 +68,9 @@ export default function Register() {
             </div>
 
             <div>
-              <Label htmlFor="user">User</Label>
+              <Label className="block mb-2" htmlFor="user">
+                User
+              </Label>
               <Input
                 {...register("user", { required: true })}
                 id="user"
@@ -72,7 +79,9 @@ export default function Register() {
             </div>
 
             <div>
-              <Label htmlFor="email">Email</Label>
+              <Label className="block mb-2" htmlFor="email">
+                Email
+              </Label>
               <Input
                 {...register("email", { required: true })}
                 id="email"
@@ -82,7 +91,9 @@ export default function Register() {
             </div>
 
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label className="block mb-2" htmlFor="password">
+                Password
+              </Label>
               <Input
                 {...register("password", { required: true })}
                 id="password"

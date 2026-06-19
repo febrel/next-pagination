@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
-import prisma from "@/lib/db";
+import { query } from "@/lib/db";
 import z from "zod";
 
 const loginSchema = z.object({
@@ -14,9 +14,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { user, password } = loginSchema.parse(body);
 
-    const userFound = await prisma.user.findFirst({
-      where: { user },
-    });
+    const result = await query(
+      `SELECT * FROM "user" WHERE "user" = $1 LIMIT 1`,
+      [user],
+    );
+
+    const userFound = result.rows[0];
 
     if (!userFound) {
       return NextResponse.json(
@@ -66,7 +69,10 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (err: any) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ error: err.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: err.issues.map((i) => i.message).join(", ") },
+        { status: 400 },
+      );
     }
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

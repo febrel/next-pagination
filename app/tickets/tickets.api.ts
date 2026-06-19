@@ -5,16 +5,18 @@ export const getTickets = async ({
   page,
   limit,
   status,
+  userId,
 }: {
   page: number;
   limit: number;
   status?: string;
+  userId: string;
 }): Promise<{
   tickets: Ticket[];
   totalPages: number;
 }> => {
   try {
-    let url = `${URL}/tickets?page=${page}&limit=${limit}`;
+    let url = `${URL}/tickets?page=${page}&limit=${limit}&userId=${userId}`;
 
     if (status) {
       url += `&status=${status}`;
@@ -81,7 +83,7 @@ export const updateTicket = async (id: string, ticket: TicketForm) => {
       },
     });
 
-    const data = response.json();
+    const data = await response.json();
     // if (!response.ok) {
     //   throw new Error(data.error);
     // }

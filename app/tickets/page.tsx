@@ -4,6 +4,8 @@ import { getTickets } from "./tickets.api";
 import { TicketCard } from "@/components/ticket-card";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import { jwtVerify } from "jose";
 import { TicketPagination } from "@/components/ticket-pagination";
 import { TicketFilter } from "@/components/ticket-filter";
 
@@ -16,12 +18,34 @@ interface Params {
 }
 
 export default async function TicketsPage({ searchParams }: Params) {
-  // Envia params de url
   const page = Number((await searchParams)?.page || 1);
   const limit = Number((await searchParams)?.limit || 3);
   const status = (await searchParams)?.status;
 
-  const { tickets, totalPages } = await getTickets({ page, limit, status });
+  const cookieStore = await cookies();
+  const token = cookieStore.get("session")?.value;
+  let userId = "";
+
+  if (token) {
+    try {
+      const secret = new TextEncoder().encode(
+        process.env.JWT_SECRET || "fallback-secret-change-in-production",
+      );
+      const { payload } = await jwtVerify(token, secret);
+      userId = payload.id as string;
+    } catch {
+      redirect("/");
+    }
+  } else {
+    redirect("/");
+  }
+
+  const { tickets, totalPages } = await getTickets({
+    page,
+    limit,
+    status,
+    userId,
+  });
 
   // Si la pagina actual no tiene tickets y no es la primera, redirige a la ultima pagina valida
   if (tickets.length === 0 && page > 1) {

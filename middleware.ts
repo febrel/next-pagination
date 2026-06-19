@@ -2,37 +2,56 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const protectedPaths = ["/tickets"];
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  const isProtected = protectedPaths.some((path) =>
-    pathname.startsWith(path),
-  );
-
-  if (!isProtected) {
-    return NextResponse.next();
-  }
+  const isProtected = pathname.startsWith("/tickets");
+  const isPublicAuthPage = pathname === "/" || pathname.startsWith("/register");
 
   const token = request.cookies.get("session")?.value;
 
-  if (!token) {
-    return NextResponse.redirect(new URL("/", request.url));
+  // Si visita login o register con sesion activa, cerrar sesion
+  if (isPublicAuthPage && token) {
+    try {
+      const secret = new TextEncoder().encode(
+        process.env.JWT_SECRET || "fallback-secret-change-in-production",
+      );
+      await jwtVerify(token, secret);
+
+      const response = NextResponse.next();
+      response.cookies.set("session", "", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 0,
+        path: "/",
+      });
+      return response;
+    } catch {
+      // token invalido, continuar normal
+    }
   }
 
-  try {
-    const secret = new TextEncoder().encode(
-      process.env.JWT_SECRET || "fallback-secret-change-in-production",
-    );
+  // Proteger rutas de tickets
+  if (isProtected) {
+    if (!token) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
 
-    await jwtVerify(token, secret);
-    return NextResponse.next();
-  } catch {
-    return NextResponse.redirect(new URL("/", request.url));
+    try {
+      const secret = new TextEncoder().encode(
+        process.env.JWT_SECRET || "fallback-secret-change-in-production",
+      );
+      await jwtVerify(token, secret);
+      return NextResponse.next();
+    } catch {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
+
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/tickets/:path*"],
+  matcher: ["/", "/register", "/register/:path*", "/tickets/:path*"],
 };

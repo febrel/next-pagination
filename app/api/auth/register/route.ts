@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
-import prisma from "@/lib/db";
+import { query } from "@/lib/db";
 import z from "zod";
 
 const registerSchema = z.object({
@@ -15,11 +15,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, user, email, password } = registerSchema.parse(body);
 
-    const existingEmail = await prisma.user.findUnique({
-      where: { email },
-    });
+    const existingEmail = await query(
+      `SELECT id FROM "user" WHERE email = $1 LIMIT 1`,
+      [email],
+    );
 
-    if (existingEmail) {
+    if (existingEmail.rows.length > 0) {
       return NextResponse.json(
         { error: "Email already registered" },
         { status: 409 },
@@ -28,14 +29,10 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await prisma.user.create({
-      data: {
-        name,
-        user,
-        email,
-        password: hashedPassword,
-      },
-    });
+    await query(
+      `INSERT INTO "user" (id, name, "user", email, password, "updatedAt") VALUES (gen_random_uuid()::text, $1, $2, $3, $4, NOW())`,
+      [name, user, email, hashedPassword],
+    );
 
     return NextResponse.json(
       { message: "User registered successfully" },
@@ -43,8 +40,19 @@ export async function POST(request: NextRequest) {
     );
   } catch (err: any) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ error: err.issues }, { status: 400 });
+      return NextResponse.json(
+        { error: err.issues.map((i) => i.message).join(", ") },
+        { status: 400 },
+      );
     }
+
+    if (err.code === "23505") {
+      return NextResponse.json(
+        { error: "Email already registered" },
+        { status: 409 },
+      );
+    }
+
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
