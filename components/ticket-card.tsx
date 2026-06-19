@@ -17,6 +17,7 @@ import { revalidate } from "@/lib/actions";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MouseEvent } from "react";
+import { toast } from "sonner";
 
 const TICKET_STATUS_VARIANTS = {
   TODO: "default",
@@ -49,9 +50,12 @@ export function TicketCard({ ticket }: { ticket: Ticket }) {
   // Delete
   const handleDelete = async (e: MouseEvent<HTMLButtonElement>) => {
     try {
+      let response: any;
+
       e.preventDefault();
-      await deleteTicket(ticket.id);
-      await revalidate("/tickets");
+      response = await deleteTicket(ticket.id);
+      toast.error(response.message);
+      response = await revalidate("/tickets");
       router.replace(`/tickets?${searchParams.toString()}`);
     } catch (err) {
       console.error(err);

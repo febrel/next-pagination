@@ -5,11 +5,13 @@ import { TicketCard } from "@/components/ticket-card";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { TicketPagination } from "@/components/ticket-pagination";
+import { TicketFilter } from "@/components/ticket-filter";
 
 interface Params {
   searchParams: Promise<{
     page: number;
     limit: number;
+    status: string;
   }>;
 }
 
@@ -17,8 +19,9 @@ export default async function TicketsPage({ searchParams }: Params) {
   // Envia params de url
   const page = Number((await searchParams)?.page || 1);
   const limit = Number((await searchParams)?.limit || 3);
+  const status = (await searchParams)?.status;
 
-  const { tickets, totalPages } = await getTickets({ page, limit });
+  const { tickets, totalPages } = await getTickets({ page, limit, status });
 
   // Si la pagina actual no tiene tickets y no es la primera, redirige a la ultima pagina valida
   if (tickets.length === 0 && page > 1) {
@@ -37,10 +40,16 @@ export default async function TicketsPage({ searchParams }: Params) {
         </Button>
       </header>
 
+      <div>
+        <TicketFilter status={status} />
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
-        {tickets.map((ticket) => (
-          <TicketCard key={ticket.id} ticket={ticket} />
-        ))}
+        {tickets.length > 0
+          ? tickets.map((ticket) => (
+              <TicketCard key={ticket.id} ticket={ticket} />
+            ))
+          : "No tickets found"}
       </div>
 
       <div>

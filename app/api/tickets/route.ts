@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { ticketSchema } from "@/lib/schemas/ticket.shema";
 import prisma from "@/lib/db";
 import z from "zod";
+import { TicketStatus } from "@/app/tickets/tickets.interface";
 
 // GET - ALL
 // export async function GET() {
@@ -23,14 +24,22 @@ export async function GET(request: NextRequest) {
     // Captura params de url, si no pone por defecto
     const page = Number(searchParams.get("page") || 1);
     const limit = Number(searchParams.get("limit") || 3);
+    const status = searchParams.get("status") as TicketStatus | undefined;
 
-    const count = await prisma.ticket.count();
+    const count = await prisma.ticket.count({
+      where: {
+        status: status || undefined,
+      },
+    });
     const totalPages = Math.ceil(count / limit); // redondea pages:  3 / 2 = 2
 
     // Operacion para la pagination
     const tickets = await prisma.ticket.findMany({
       skip: (page - 1) * limit,
       take: limit,
+      where: {
+        status: status || undefined,
+      },
     });
 
     return NextResponse.json({ tickets, totalPages });
