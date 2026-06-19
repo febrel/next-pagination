@@ -4,10 +4,36 @@ import prisma from "@/lib/db";
 import z from "zod";
 
 // GET - ALL
-export async function GET() {
+// export async function GET() {
+//   try {
+//     const tickets = await prisma.ticket.findMany();
+//     return NextResponse.json({ tickets });
+//   } catch (error: any) {
+//     return NextResponse.json({ error: error.message }, { status: 500 });
+//   }
+// }
+
+// GET - ALL PAGINATION
+export async function GET(request: NextRequest) {
   try {
-    const tickets = await prisma.ticket.findMany();
-    return NextResponse.json({ tickets });
+    const url = await request.url;
+
+    const { searchParams } = new URL(url);
+
+    // Captura params de url, si no pone por defecto
+    const page = Number(searchParams.get("page") || 1);
+    const limit = Number(searchParams.get("limit") || 3);
+
+    const count = await prisma.ticket.count();
+    const totalPages = Math.ceil(count / limit); // redondea pages:  3 / 2 = 2
+
+    // Operacion para la pagination
+    const tickets = await prisma.ticket.findMany({
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return NextResponse.json({ tickets, totalPages });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

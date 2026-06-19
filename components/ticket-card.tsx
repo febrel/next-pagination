@@ -15,6 +15,7 @@ import { LucideTrash } from "lucide-react";
 import { deleteTicket } from "@/app/tickets/tickets.api";
 import { revalidate } from "@/lib/actions";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { MouseEvent } from "react";
 
 const TICKET_STATUS_VARIANTS = {
@@ -42,12 +43,16 @@ const getStatusName = (status: TicketStatus) => {
 };
 
 export function TicketCard({ ticket }: { ticket: Ticket }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   // Delete
   const handleDelete = async (e: MouseEvent<HTMLButtonElement>) => {
     try {
       e.preventDefault();
       await deleteTicket(ticket.id);
       await revalidate("/tickets");
+      router.replace(`/tickets?${searchParams.toString()}`);
     } catch (err) {
       console.error(err);
     }
