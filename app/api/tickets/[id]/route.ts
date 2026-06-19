@@ -34,7 +34,7 @@ export async function PUT(
     // Validamos el cuerpo con Zod
     const { title, description, assigneer, status } = ticketSchema.parse(body);
 
-    const ticket = await prisma.ticket.update({
+    await prisma.ticket.update({
       data: {
         title,
         description,
@@ -46,7 +46,7 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({ ticket });
+    return NextResponse.json({ message: "Ticket update successfully" });
   } catch (err: any) {
     // Si el error es de validación de Zod
     if (err instanceof z.ZodError) {
